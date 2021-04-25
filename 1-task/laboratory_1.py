@@ -1,6 +1,8 @@
 from analysis_methods import Euler, EulerImp, Runge, Adams2E, Adams2I, Tochnist1, Tochnist1Ad2I, \
-    Stiykist, StiykistAdams2I, Euler2, EulerCromer2, Midpoint2, Verlet2, VeloVerlet2, RelEr, RelErV, Runge2
+    Stiykist, StiykistAdams2I, Euler2, EulerCromer2, Midpoint2, Verlet2, VeloVerlet2, RelEr, RelErV, \
+    Runge2, ProgonkaX, ProgonkaY, Runge_2
 import math
+import matplotlib.pyplot as plt
 
 H = [0.01, 0.05, 0.1, 0.3, 0.5]
 TF = 10
@@ -133,3 +135,178 @@ for i in range(10):
     print('n=', n, 'Error = ', E)
     if E <= 0.01:
         break
+
+# Завдання 3
+
+# Задаємо умови: варіант 18
+k = 0.13
+l = 52
+xf = l
+x0 = 0
+y0 = 0
+yf = 0
+t0 = 0
+tf = 6.7
+n = 20
+
+(T, X) = ProgonkaX(t0, tf, x0, xf, n, k)
+Y = ProgonkaY(t0, tf, y0, yf, n, k)[1]
+
+plt.plot(X, Y)
+
+
+# Метод стрільби
+# Розв'яжемо як систему методом Рунге-Кути
+
+# Метод Рунге-Кути для системи з 2 рівнянь Runge2(function, n, t0, tf, x0, x10)
+# return  (t,x,x1,(h,t0,tf,x0,x10,'Runge 4 order'))
+
+def fzavd3X(t, x, x1):
+    f1 = (-k * x1)  # Функція, задана дифрівнянням у 2 завданні, яка визначає прискорення
+    f2 = x1  # Функція для швидкості, отримана з представлення рівняння руху у вигляді системи
+    return (f1, f2)
+
+
+def fzavd3Y(t, y, y1):
+    f1 = (-k * y1 - 9.8)  # Функція, задана дифрівнянням у 2 завданні, яка визначає прискорення
+    f2 = y1  # Функція для швидкості, отримана з представлення рівняння руху у вигляді системи
+    return (f1, f2)
+
+
+# Задаємо умови: варіант 18
+k = 0.13
+l = 52
+xf = l
+x0 = 0
+y0 = 0
+yf = 0
+t0 = 0
+tf = 6.7
+n = 20
+
+# Підбираємо початкову швидкість - перший вистріл
+x10 = 5
+y10 = 10
+
+XS = Runge2(fzavd3X, n, t0, tf, x0, x10)[1]
+YS = Runge2(fzavd3Y, n, t0, tf, y0, y10)[1]
+
+print(XS)
+print(YS)
+
+# Розв'яжемо для Х
+# Метод звуження інтервалу вдвічі
+
+x101 = 0.5  # При цьому значенні недолітаємо, швидкість пристрілки
+x102 = 20  # При цьому значенні перелітаємо
+
+# Задамо цикл на звуження проміжку вдвічі поки не прилетимо куди слід
+d = 0.001  # Допустима похибка координати в кінці руху
+for i in range(30):
+    x103 = math.tan((math.atan(x101) + math.atan(x102)) / 2)
+    C = Runge2(fzavd3X, n, t0, tf, x0, x103)[1][-1]
+    # print('Швидкість',x103,'кінцева координата',C)
+    if abs((C - xf)) < d:
+        x10 = x103
+        print(x103)
+        break
+    elif (C - xf) < 0:
+        x101 = x103
+    else:
+        x102 = x103
+
+# Розв'яжемо для Y
+# Метод звуження інтервалу вдвічі
+
+y101 = 10  # При цьому значенні недолітаємо, швидкість пристрілки
+y102 = 20  # При цьому значенні перелітаємо
+
+# Задамо цикл на звуження проміжку вдвічі поки не прилетимо куди слід
+d = 0.001  # Допустима похибка координати в кінці руху
+for i in range(30):
+    y103 = math.tan((math.atan(y101) + math.atan(y102)) / 2)
+    C = Runge2(fzavd3Y, n, t0, tf, y0, y103)[1][-1]
+    # print('Швидкість',y103,'кінцева координата',C)
+    if abs((C - yf)) < d:
+        y10 = y103
+        print(y103)
+        break
+    elif (C - yf) < 0:
+        y101 = y103
+    else:
+        y102 = y103
+
+# Вводимо знайдені початкові швидкості методом звуження інтервалу
+x10 = 15.001481695995
+y10 = 1.320018948282612
+
+XS = Runge2(fzavd3X, n, t0, tf, x0, x10)[1]
+YS = Runge2(fzavd3Y, n, t0, tf, y0, y10)[1]
+
+print(XS)
+print(YS)
+
+plt.plot(XS, YS)
+
+# Розв'яжемо для Х
+# Метод для лінійних задач
+
+# Робимо дві пристрілки: будь-які
+x101 = 200
+x102 = 300
+
+XS1 = Runge2(fzavd3X, n, t0, tf, x0, x101)[1]
+XS2 = Runge2(fzavd3X, n, t0, tf, x0, x102)[1]
+
+B1 = XS1[-1]
+B2 = XS2[-1]  # Відповідно до формул лекція 3-4 слайд 45
+
+# Створюємо таблицю розв'язку як суму двох пристрілочних розв'язків
+XStr = [((xf - B2) * XS1[i] + (B1 - xf) * XS2[i]) / (B1 - B2) for i in range(len(XS1))]
+
+# Розв'яжемо для Y
+# Метод для лінійних задач
+
+# Робимо дві пристрілки
+y101 = 10
+y102 = 20
+
+YS1 = Runge2(fzavd3Y, n, t0, tf, y0, y101)[1]
+YS2 = Runge2(fzavd3Y, n, t0, tf, y0, y102)[1]
+
+B1 = YS1[-1]
+B2 = YS2[-1]  # Відповідно до формул лекція 3-4 слайд 45
+
+# Створюємо таблицю розв'язку як суму двох пристрілочних розв'язків
+YStr = [((yf - B2) * YS1[i] + (B1 - yf) * YS2[i]) / (B1 - B2) for i in range(len(YS1))]
+
+plt.plot(XStr, YStr)
+
+
+# Завдання 4
+
+# Задаємо систему рівнянь
+
+def func4zavd(t, x, y):
+    funcX = a * (1 - x / k1) * x - b / (k2 - x) * x * y
+    funcY = (c - d * y / x) * y
+    return (funcX, funcY)
+
+
+# Задаємо умови задачі варіант 31
+x0 = 42
+y0 = 3
+a = 1.6
+b = 3
+c = 0.08
+d = 0.05
+k1 = 9.1
+k2 = 1.9
+
+# Будуємо графіки розв'язків
+(T, X, Y, opys) = Runge_2(func4zavd, 2000, 0, 300, x0, y0)
+
+print(X)
+print(Y)
+plt.plot(T, X)
+plt.plot(T, Y)
