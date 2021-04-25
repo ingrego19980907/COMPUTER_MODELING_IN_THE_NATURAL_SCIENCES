@@ -147,3 +147,104 @@ def StiykistAdams2I(Method, functionImplicitAdams, function, solution, H, t0, tf
     plt.title(Opis[4] + ' with varying step')  # Підписуємо графік
     plt.legend()  # Вмикаємо легенду
     return ()
+
+
+# Явний метод Ейлера для 2 порядку
+def Euler2(function, n, t0, tf, x0, x10):
+    # function - функція, задана дифрівнянням, яка визначає швидкість приросту координати
+    h = round((tf - t0) / n, 3)  # обчислюємо крок
+    t = [round(t0 + i * h, 3) for i in range(n + 1)]  # Створюємо таблицю дискретного часу
+    x = [x0]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    x1 = [x10]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    for i in range(n):  # Заходимо в цикл, що складається з n кроків
+        x1 = x1 + [round(x1[i] + function(t[i], x[i], x1[i]) * h, 3)]
+        x = x + [round(x[i] + h * x1[i], 3)]
+    return t, x, x1, (h, t0, tf, x0, x10, 'Explicit Euler')
+
+
+# Напівнеявний метод Ейлера для 2 порядку (метод Ейлера-Кромера)
+def EulerCromer2(function, n, t0, tf, x0, x10):
+    h = round((tf - t0) / n, 3)  # обчислюємо крок
+    t = [round(t0 + i * h, 3) for i in range(n + 1)]  # Створюємо таблицю дискретного часу
+    x = [x0]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    x1 = [x10]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    for i in range(n):  # Заходимо в цикл, що складається з n кроків
+        x1 = x1 + [round(x1[i] + function(t[i], x[i], x1[i]) * h, 3)]
+        x = x + [round(x[i] + h * x1[i + 1], 3)]
+    return t, x, x1, (h, t0, tf, x0, x10, 'Euler Cromer')
+
+
+# Метод серединної точки для 2 порядку
+def Midpoint2(function, n, t0, tf, x0, x10):
+    h = round((tf - t0) / n, 3)  # обчислюємо крок
+    t = [round(t0 + i * h, 3) for i in range(n + 1)]  # Створюємо таблицю дискретного часу
+    x = [x0]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    x1 = [x10]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    for i in range(n):
+        x1 += [round(x1[i] + function(t[i], x[i], x1[i]) * h, 3)]
+        x = x + [round(x[i] + h * (x1[i] + x1[i + 1]) / 2, 3)]
+    return t, x, x1, (h, t0, tf, x0, x10, 'Midpoint')
+
+
+# Метод Верле
+def Verlet2(function, functionVerlet, n, t0, tf, x0, x10):
+    h = round((tf - t0) / n, 3)  # обчислюємо крок
+    t = [round(t0 + i * h, 3) for i in range(n + 1)]  # Створюємо таблицю дискретного часу
+    x = [x0]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    x1 = [x10]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    i = 0  # Перший крок - методом серединної точки
+    x1 = x1 + [round(x1[i] + function(t[i], x[i], x1[i]) * h, 3)]
+    x = x + [round(x[i] + h * (x1[i] + x1[i + 1]) / 2, 3)]
+    for i in range(n - 1):  # Заходимо в цикл, що складається з (n-1) кроків
+        x = x + [round(functionVerlet(t[i], x[i], x[i + 1], x1[i], h), 3)]
+        if i != 0:
+            x1 = x1 + [round((x[i + 2] - x[i]) / 2 / h, 3)]
+    return t, x, x1, (h, t0, tf, x0, x10, 'Verlet Integration')
+
+
+# Метод Верле швидкісний
+def VeloVerlet2(function, funcVeloVerlet, n, t0, tf, x0, x10):
+    h = round((tf - t0) / n, 3)  # обчислюємо крок
+    t = [round(t0 + i * h, 3) for i in range(n + 1)]  # Створюємо таблицю дискретного часу
+    x = [x0]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    x1 = [x10]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    for i in range(n):  # Заходимо в цикл, що складається з (n) кроків
+        x = x + [round(x[i] + x1[i] * h + function(t[i], x[i], x1[i]) * h * h / 2, 3)]
+        x1 = x1 + [round(funcVeloVerlet(t[i], x[i], x[i + 1], x1[i], h), 3)]
+    return t, x, x1, (h, t0, tf, x0, x10, 'Verlet Integration')
+
+
+# Функція оцінки похибки
+def RelEr(Method, function, solution, n, t0, tf, x0,
+          x10):  # задаємо назву методу, буде розв'язувати задане рівняння при даній початковій умові з різними кроками з масиву Н, додатково треба буде задати аналітичний розв'язок
+    (T, X, X1, Opis) = Method(function, n, t0, tf, x0, x10)  # З і-м кроком розв'язуємо рівняння заданим методом
+    sol = [round(solution(T[i]), 3) for i in range(len(T))]  # Таблиця значень функції аналітичного розв'язку
+    relError = round(
+        math.sqrt(np.sum([((sol[i] - X[i]) / sol[i] if sol[i] != 0 else 0) ** 2 for i in range(len(T))]) / (len(T))), 5)
+    return relError
+
+
+# Функція оцінки похибки для методу Верле
+def RelErV(Method, function, functionVerlet, solution, n, t0, tf, x0, x10):
+    (T, X, X1, Opis) = Method(function, functionVerlet, n, t0, tf, x0, x10)
+    sol = [round(solution(T[i]), 3) for i in range(len(T))]
+    relError = round(math.sqrt(np.sum([((sol[i] - X[i]) / sol[i] if sol[i] != 0 else 0) ** 2 for i in range(len(T))]
+                                      ) / (len(T))), 5)
+    return relError
+
+
+# Метод Рунге-Кути для системи з 2 рівнянь
+def Runge2(function, n, t0, tf, x0, x10):
+    h = round((tf - t0) / n, 3)
+    t = [round(t0 + i * h, 3) for i in range(n + 1)]  # Створюємо таблицю дискретного часу
+    x = [x0]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    x1 = [x10]  # Створюємо масив, який поки що містить 1 елемент (нульовий елемент - початкова умова)
+    for i in range(n):  # Заходимо в цикл, що складається з n кроків
+        k1x1 = function(t[i], x[i], x1[i])[0]  # Обчислюємо к1 для швидкості за м. Рунге-Кути 4 порядку
+        k1x = function(t[i], x[i], x1[i])[1]  # Обчислюємо к1 для координати за м. Рунге-Кути 4 порядку
+        (k2x1, k2x) = function(t[i] + h / 2, x[i] + h * k1x / 2, x1[i] + h * k1x1 / 2)
+        (k3x1, k3x) = function(t[i] + h / 2, x[i] + h * k2x / 2, x1[i] + h * k2x1 / 2)
+        (k4x1, k4x) = function(t[i] + h, x[i] + h * k3x, x1[i] + h * k3x1)
+        x = x + [round(x[i] + h / 6 * (k1x + 2 * k2x + 2 * k3x + k4x), 3)]
+        x1 = x1 + [round(x1[i] + h / 6 * (k1x1 + 2 * k2x1 + 2 * k3x1 + k4x1), 3)]
+    return t, x, x1, (h, t0, tf, x0, x10, 'Runge 4 order')
